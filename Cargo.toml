@@ -1,0 +1,12 @@
+[package]
+name = "rust_bpf"
+version = "0.1.0"
+authors = ["Melvin Walls <mwalls67@gmail.com>"]
+
+[[bin]]
+name = "compiler"
+path = "src/compiler/main.rs"
+
+[[bin]]
+name = "vm"
+path = "src/vm/main.rs"
