@@ -1,2 +1,12 @@
+# Build results
 /target/
-**/*.rs.bk
+target/
+
+# Remove rustfmt backups
+*.rs.bk
+*.o
+*.so
+
+# Vim files
+*.vi
+*.swp
