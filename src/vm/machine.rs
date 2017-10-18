@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-use instruction::Instruction;
+use instruction::*;
 
 const SCRATCH_MEM_SLOTS: usize = 16;
 
@@ -12,6 +12,31 @@ pub struct PsuedoMachine {
     index: u32,
     /// Scratch memory.
     memory: [u32; SCRATCH_MEM_SLOTS],
+}
+
+trait Testing {
+    fn frame(&self) -> u32;
+    fn accumulator(&self) -> u32;
+    fn index(&self) -> u32;
+    fn memory(&self) -> &[u32];
+}
+
+impl Testing for PsuedoMachine {
+    fn frame(&self) -> u32 {
+        self.frame
+    }
+
+    fn accumulator(&self) -> u32 {
+        self.accumulator
+    }
+
+    fn index(&self) -> u32 {
+        self.index
+    }
+
+    fn memory(&self) -> &[u32] {
+        &self.memory
+    }
 }
 
 impl PsuedoMachine {
@@ -37,16 +62,16 @@ impl PsuedoMachine {
     /// Execute an instruction.
     /// Returns Ok(Some) if `instr` is a return instruction.
     /// Returns Err on bad instruction.
-    pub fn execute(&mut self, _: &Instruction) -> Result<Option<u32>, ()> {
+    pub fn execute(&mut self, instr: &Instruction, pkt: &[u8]) -> Result<Option<u32>, ()> {
         Ok(None)
     }
 
     /// Runs the program stored as a slice of instructions.
     /// Returns Ok with accept/reject if the program completes, Err otherwise.
-    pub fn run_program(&mut self, prog: &[Instruction]) -> Result<u32, ()> {
+    pub fn run_program(&mut self, prog: &[Instruction], pkt: &[u8]) -> Result<u32, ()> {
         loop {
             let ref instr = prog[self.frame as usize];
-            let res = self.execute(instr);
+            let res = self.execute(instr, pkt);
             if res.is_err() {
                 return Err(());
             }
@@ -59,7 +84,7 @@ impl PsuedoMachine {
 
     /// Runs the program stored in a byte buffer.
     /// Returns Ok with accept/reject if the program completes, Err otherwise.
-    pub fn run_program_bytes(&mut self, _: &[u8]) -> Result<u32, ()> {
+    pub fn run_program_bytes(&mut self, prog: &[u8], pkt: &[u8]) -> Result<u32, ()> {
         Ok(0)
     }
 }
