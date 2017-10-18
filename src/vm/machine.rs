@@ -59,11 +59,22 @@ impl PsuedoMachine {
         self.memory[n]
     }
 
+    /// Load immediate `k` into the accumulator.
+    fn ldi(&mut self, k: u32) -> Option<u32> {
+        self.accumulator = k;
+        None
+    }
+
     /// Execute an instruction.
     /// Returns Ok(Some) if `instr` is a return instruction.
     /// Returns Err on bad instruction.
     pub fn execute(&mut self, instr: &Instruction, pkt: &[u8]) -> Result<Option<u32>, ()> {
-        Ok(None)
+        let opcode = instr.opcode;
+        let k = instr.k;
+        match opcode {
+            CLASS_LD | MODE_IMM | SIZE_W => Ok(self.ldi(k)),
+            _ => Ok(None)
+        }
     }
 
     /// Runs the program stored as a slice of instructions.
@@ -85,6 +96,21 @@ impl PsuedoMachine {
     /// Runs the program stored in a byte buffer.
     /// Returns Ok with accept/reject if the program completes, Err otherwise.
     pub fn run_program_bytes(&mut self, prog: &[u8], pkt: &[u8]) -> Result<u32, ()> {
-        Ok(0)
+        unimplemented!()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ldi() {
+        let mut pm = PsuedoMachine::new();
+        let instr = Instruction::new(CLASS_LD | MODE_IMM | SIZE_W, 0, 0, 0xDEADBEEF);
+        let pkt = [0 as u8; 64];
+        let ret = pm.execute(&instr, &pkt);
+        assert!(ret.unwrap() == None);
+        assert!(pm.accumulator() == 0xDEADBEEF);
     }
 }
