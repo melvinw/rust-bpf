@@ -74,9 +74,14 @@ pub struct Instruction {
 }
 
 impl Instruction {
+    /// Constructor for convenience
+    pub fn new(opcode: u16, jt: u8, jf: u8, k: u32) -> Instruction {
+        Instruction{opcode: opcode, jt: jt, jf: jf, k: k}
+    }
+
     /// Decodes an instruction from a byte buffer.
     /// Returns None if the instruction is ilformed.
-    fn from_bytes(buf: &[u8]) -> Option<Instruction> {
+    pub fn from_bytes(buf: &[u8]) -> Option<Instruction> {
         let mut cur = Cursor::new(buf);
 
         let opcode_res = cur.read_u16::<NativeEndian>();
@@ -103,42 +108,42 @@ impl Instruction {
     }
 
     /// Decodes an instruction from a u64 in host byte order.
-    fn from_u64(val: u64) -> Instruction {
+    pub fn from_u64(val: u64) -> Instruction {
         unsafe { mem::transmute(val) }
     }
 
     /// Returns the operator class.
-    fn class(&self) -> u16 {
+    pub fn class(&self) -> u16 {
         self.opcode & 0x07
     }
 
     /// Returns the whether the operator operates on a byte, half-word or word.
-    fn size(&self) -> u16 {
+    pub fn size(&self) -> u16 {
         self.opcode & 0x18
     }
 
     /// Returns the operator's addressing mode.
-    fn mode(&self) -> u16 {
+    pub fn mode(&self) -> u16 {
         self.opcode & 0xe0
     }
 
     /// Returns the encoded operator.
-    fn op(&self) -> u16 {
+    pub fn op(&self) -> u16 {
        self.opcode & 0xf0
     }
 
     /// Returns the source of the operator's argument(s).
-    fn src(&self) -> u16 {
+    pub fn src(&self) -> u16 {
         self.opcode & 0x08
     }
 
     /// Returns where the return value comes from.
-    fn rval(&self) -> u16 {
+    pub fn rval(&self) -> u16 {
         self.opcode & 0x18
     }
 
     /// Returns one of the register transfer functions.
-    fn miscop(&self) -> u16 {
+    pub fn miscop(&self) -> u16 {
         self.opcode & 0xf8
     }
 }
