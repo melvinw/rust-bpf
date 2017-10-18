@@ -60,6 +60,15 @@ pub const SRC_X: u16 = 0x08;
 // Retval
 pub const RVAL_A: u16 = 0x10;
 
+// Helpful masks
+pub const MASK_CLASS: u16 = 0x07;
+pub const MASK_SIZE: u16 = 0x18;
+pub const MASK_MODE: u16 = 0xe0;
+pub const MASK_OP: u16 = 0xf0;
+pub const MASK_SRC: u16 = 0x08;
+pub const MASK_RVAL: u16 = 0x18;
+pub const MASK_MISCOP: u16 = 0xf8;
+
 /// A BPF psuedo-machine instruction.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Instruction {
@@ -114,36 +123,36 @@ impl Instruction {
 
     /// Returns the operator class.
     pub fn class(&self) -> u16 {
-        self.opcode & 0x07
+        self.opcode & MASK_CLASS
     }
 
     /// Returns the whether the operator operates on a byte, half-word or word.
     pub fn size(&self) -> u16 {
-        self.opcode & 0x18
+        self.opcode & MASK_SIZE
     }
 
     /// Returns the operator's addressing mode.
     pub fn mode(&self) -> u16 {
-        self.opcode & 0xe0
+        self.opcode & MASK_MODE
     }
 
     /// Returns the encoded operator.
     pub fn op(&self) -> u16 {
-       self.opcode & 0xf0
+       self.opcode & MASK_OP
     }
 
     /// Returns the source of the operator's argument(s).
     pub fn src(&self) -> u16 {
-        self.opcode & 0x08
+        self.opcode & MASK_SRC
     }
 
     /// Returns where the return value comes from.
     pub fn rval(&self) -> u16 {
-        self.opcode & 0x18
+        self.opcode & MASK_RVAL
     }
 
     /// Returns one of the register transfer functions.
     pub fn miscop(&self) -> u16 {
-        self.opcode & 0xf8
+        self.opcode & MASK_MISCOP
     }
 }
