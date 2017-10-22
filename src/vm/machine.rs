@@ -118,6 +118,15 @@ impl PsuedoMachine {
     Ok(None)
   }
 
+  /// Load a byte into the accumulator.
+  fn ld_u8(&mut self, k: u32, pkt: &[u8]) -> Result<Option<u32>, ()> {
+    if k as usize >= pkt.len() {
+      return Err(());
+    }
+    self.accumulator = pkt[k as usize] as u32;
+    Ok(None)
+  }
+
   /// Execute an instruction and increments the frame pointer after successful execution.
   /// Returns Ok(Some) if `instr` is a return instruction.
   /// Returns Err on bad instruction.
@@ -136,6 +145,8 @@ impl PsuedoMachine {
       LDWI => self.ld_u32(idx + k, pkt),
       LDH => self.ld_u16(k, pkt),
       LDHI => self.ld_u16(idx + k, pkt),
+      LDB => self.ld_u8(k, pkt),
+      LDBI => self.ld_u8(idx + k, pkt),
       _ => Err(()),
     };
     if ret.is_err() {
@@ -220,6 +231,20 @@ mod tests {
   }
 
   #[test]
+  fn ldb() {
+    let mut pm = PsuedoMachine::new();
+    let mut pkt = [0 as u8; 64];
+    pkt[3] = 0xDE;
+    pkt[4] = 0xAD;
+    pkt[5] = 0xBE;
+    pkt[6] = 0xEF;
+    let instr = Instruction::new(MODE_ABS | SIZE_B | CLASS_LD, 0, 0, 3);
+    let ret = pm.execute(&instr, &pkt);
+    assert!(ret.unwrap() == None);
+    assert!(pm.accumulator() == 0xDE);
+  }
+
+  #[test]
   fn ldwi() {
     let mut pm = PsuedoMachine::new();
     let mut pkt = [0 as u8; 64];
@@ -247,5 +272,20 @@ mod tests {
     let ret = pm.execute(&instr, &pkt);
     assert!(ret.unwrap() == None);
     assert!(pm.accumulator() == 0xDEAD);
+  }
+
+  #[test]
+  fn ldbi() {
+    let mut pm = PsuedoMachine::new();
+    let mut pkt = [0 as u8; 64];
+    pkt[4] = 0xDE;
+    pkt[5] = 0xAD;
+    pkt[6] = 0xBE;
+    pkt[7] = 0xEF;
+    pm.set_index(1);
+    let instr = Instruction::new(MODE_IND | SIZE_B | CLASS_LD, 0, 0, 3);
+    let ret = pm.execute(&instr, &pkt);
+    assert!(ret.unwrap() == None);
+    assert!(pm.accumulator() == 0xDE);
   }
 }

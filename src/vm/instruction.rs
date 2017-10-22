@@ -72,14 +72,18 @@ pub const MASK_MISCOP: u16 = 0xf8;
 // Mnemonics
 /// Load an immediate into the accumulator
 pub const LDI: u16 = MODE_IMM | CLASS_LD;
-/// Load an word into the accumulator
+/// Load a word into the accumulator
 pub const LDW: u16 = MODE_ABS | SIZE_W | CLASS_LD;
-/// Load an word into the accumulator with indirection
+/// Load a word into the accumulator with indirection
 pub const LDWI: u16 = MODE_IND | SIZE_W | CLASS_LD;
-/// Load an half-word into the accumulator
+/// Load a half-word into the accumulator
 pub const LDH: u16 = MODE_ABS | SIZE_H | CLASS_LD;
-/// Load an half-word into the accumulator with indirection
+/// Load a half-word into the accumulator with indirection
 pub const LDHI: u16 = MODE_IND | SIZE_H | CLASS_LD;
+/// Load a byte into the accumulator
+pub const LDB: u16 = MODE_ABS | SIZE_B | CLASS_LD;
+/// Load a byte into the accumulator with indirection
+pub const LDBI: u16 = MODE_IND | SIZE_B | CLASS_LD;
 
 /// A BPF psuedo-machine instruction.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
