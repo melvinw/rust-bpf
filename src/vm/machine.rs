@@ -126,19 +126,34 @@ impl PsuedoMachine {
     }
   }
 
-  /// Execute an instruction.
+  /// Execute an instruction and increments the frame pointer after successful execution.
   /// Returns Ok(Some) if `instr` is a return instruction.
   /// Returns Err on bad instruction.
   pub fn execute(&mut self, instr: &Instruction, pkt: &[u8]) -> Result<Option<u32>, ()> {
     let opcode = instr.opcode;
     let mode = instr.mode();
+    let class = instr.class();
     let k = instr.k;
-    match opcode {
+    let ret = match opcode {
       CLASS_LD | MODE_IMM | SIZE_W => self.ld_u32(mode, k, pkt),
       CLASS_LD | MODE_ABS | SIZE_W => self.ld_u32(mode, k, pkt),
       CLASS_LD | MODE_IND | SIZE_W => self.ld_u32(mode, k, pkt),
       _ => Err(()),
+    };
+    if ret.is_err() {
+      return ret;
     }
+    self.frame += match class {
+      CLASS_JMP => {
+        if self.accumulator == 0 {
+          instr.jt as u32
+        } else {
+          instr.jf as u32
+        }
+      },
+      _ => 1,
+    };
+    ret
   }
 
   /// Runs the program stored as a slice of instructions.
