@@ -69,10 +69,26 @@ pub const MASK_SRC: u16 = 0x08;
 pub const MASK_RVAL: u16 = 0x18;
 pub const MASK_MISCOP: u16 = 0xf8;
 
+// Mnemonics
+/// Load an immediate into the accumulator
+pub const LDI: u16 = MODE_IMM | CLASS_LD;
+/// Load an word into the accumulator
+pub const LDW: u16 = MODE_ABS | SIZE_W | CLASS_LD;
+/// Load an word into the accumulator with indirection
+pub const LDWI: u16 = MODE_IND | SIZE_W | CLASS_LD;
+/// Load an half-word into the accumulator
+pub const LDH: u16 = MODE_ABS | SIZE_H | CLASS_LD;
+/// Load an half-word into the accumulator with indirection
+pub const LDHI: u16 = MODE_IND | SIZE_H | CLASS_LD;
+
 /// A BPF psuedo-machine instruction.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Instruction {
-  /// The opcode.
+  /// The opcode. Layout:
+  /// +--------+--------+-------------------+
+  /// | 3 bits | 2 bits |   3 bits          |
+  /// |  mode  |  size  | instruction class |
+  /// +--------+--------+-------------------+
   pub opcode: u16,
   /// Offset of next instruction for true branch of jumps.
   pub jt: u8,

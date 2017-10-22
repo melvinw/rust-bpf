@@ -90,40 +90,32 @@ impl PsuedoMachine {
     self.memory[n]
   }
 
-  /// Load into the accumulator.
-  fn ld_u32(&mut self, mode: u16, k: u32, pkt: &[u8]) -> Result<Option<u32>, ()> {
-    match mode {
-      MODE_IMM => {
-        self.accumulator = k;
-        Ok(None)
-      },
-      MODE_ABS => {
-        if k as usize >= pkt.len() {
-          return Err(());
-        }
-        let mut cur = Cursor::new(&pkt[k as usize..]);
-        let ret = cur.read_u32::<BigEndian>();
-        if ret.is_err() {
-          return Err(());
-        }
-        self.accumulator = ret.unwrap();
-        Ok(None)
-      },
-      MODE_IND => {
-        let offset: usize = (self.index + k) as usize;
-        if offset >= pkt.len() {
-          return Err(());
-        }
-        let mut cur = Cursor::new(&pkt[offset as usize..]);
-        let ret = cur.read_u32::<BigEndian>();
-        if ret.is_err() {
-          return Err(());
-        }
-        self.accumulator = ret.unwrap();
-        Ok(None)
-      },
-      _ => Err(()),
+  /// Load a word into the accumulator.
+  fn ld_u32(&mut self, k: u32, pkt: &[u8]) -> Result<Option<u32>, ()> {
+    if k as usize >= pkt.len() {
+      return Err(());
     }
+    let mut cur = Cursor::new(&pkt[k as usize..]);
+    let ret = cur.read_u32::<BigEndian>();
+    if ret.is_err() {
+      return Err(());
+    }
+    self.accumulator = ret.unwrap();
+    Ok(None)
+  }
+
+  /// Load a half-word into the accumulator.
+  fn ld_u16(&mut self, k: u32, pkt: &[u8]) -> Result<Option<u32>, ()> {
+    if k as usize >= pkt.len() {
+      return Err(());
+    }
+    let mut cur = Cursor::new(&pkt[k as usize..]);
+    let ret = cur.read_u16::<BigEndian>();
+    if ret.is_err() {
+      return Err(());
+    }
+    self.accumulator = ret.unwrap() as u32;
+    Ok(None)
   }
 
   /// Execute an instruction and increments the frame pointer after successful execution.
@@ -131,13 +123,19 @@ impl PsuedoMachine {
   /// Returns Err on bad instruction.
   pub fn execute(&mut self, instr: &Instruction, pkt: &[u8]) -> Result<Option<u32>, ()> {
     let opcode = instr.opcode;
-    let mode = instr.mode();
     let class = instr.class();
     let k = instr.k;
+    let idx = self.index;
+
     let ret = match opcode {
-      CLASS_LD | MODE_IMM | SIZE_W => self.ld_u32(mode, k, pkt),
-      CLASS_LD | MODE_ABS | SIZE_W => self.ld_u32(mode, k, pkt),
-      CLASS_LD | MODE_IND | SIZE_W => self.ld_u32(mode, k, pkt),
+      LDI => {
+        self.accumulator = k;
+        Ok(None)
+      },
+      LDW => self.ld_u32(k, pkt),
+      LDWI => self.ld_u32(idx + k, pkt),
+      LDH => self.ld_u16(k, pkt),
+      LDHI => self.ld_u16(idx + k, pkt),
       _ => Err(()),
     };
     if ret.is_err() {
@@ -174,7 +172,7 @@ impl PsuedoMachine {
 
   /// Runs the program stored in a byte buffer.
   /// Returns Ok with accept/reject if the program completes, Err otherwise.
-  pub fn run_program_bytes(&mut self, prog: &[u8], pkt: &[u8]) -> Result<u32, ()> {
+  pub fn run_program_bytes(&mut self, _: &[u8], _: &[u8]) -> Result<u32, ()> {
     unimplemented!()
   }
 }
@@ -194,33 +192,60 @@ mod tests {
   }
 
   #[test]
-  fn ld() {
+  fn ldw() {
     let mut pm = PsuedoMachine::new();
-    let instr = Instruction::new(CLASS_LD | MODE_ABS | SIZE_W, 0, 0, 3);
     let mut pkt = [0 as u8; 64];
     pkt[3] = 0xDE;
     pkt[4] = 0xAD;
     pkt[5] = 0xBE;
     pkt[6] = 0xEF;
+    let instr = Instruction::new(MODE_ABS | SIZE_W | CLASS_LD, 0, 0, 3);
     let ret = pm.execute(&instr, &pkt);
     assert!(ret.unwrap() == None);
-    println!("{:8X}", pm.accumulator());
     assert!(pm.accumulator() == 0xDEADBEEF);
   }
 
   #[test]
-  fn ld_indirect() {
+  fn ldh() {
     let mut pm = PsuedoMachine::new();
-    pm.set_index(1);
-    let instr = Instruction::new(CLASS_LD | MODE_IND | SIZE_W, 0, 0, 3);
+    let mut pkt = [0 as u8; 64];
+    pkt[3] = 0xDE;
+    pkt[4] = 0xAD;
+    pkt[5] = 0xBE;
+    pkt[6] = 0xEF;
+    let instr = Instruction::new(MODE_ABS | SIZE_H | CLASS_LD, 0, 0, 3);
+    let ret = pm.execute(&instr, &pkt);
+    assert!(ret.unwrap() == None);
+    assert!(pm.accumulator() == 0xDEAD);
+  }
+
+  #[test]
+  fn ldwi() {
+    let mut pm = PsuedoMachine::new();
     let mut pkt = [0 as u8; 64];
     pkt[4] = 0xDE;
     pkt[5] = 0xAD;
     pkt[6] = 0xBE;
     pkt[7] = 0xEF;
+    pm.set_index(1);
+    let instr = Instruction::new(MODE_IND | SIZE_W | CLASS_LD, 0, 0, 3);
     let ret = pm.execute(&instr, &pkt);
     assert!(ret.unwrap() == None);
-    println!("{:8X}", pm.accumulator());
     assert!(pm.accumulator() == 0xDEADBEEF);
+  }
+
+  #[test]
+  fn ldhi() {
+    let mut pm = PsuedoMachine::new();
+    let mut pkt = [0 as u8; 64];
+    pkt[4] = 0xDE;
+    pkt[5] = 0xAD;
+    pkt[6] = 0xBE;
+    pkt[7] = 0xEF;
+    pm.set_index(1);
+    let instr = Instruction::new(MODE_IND | SIZE_H | CLASS_LD, 0, 0, 3);
+    let ret = pm.execute(&instr, &pkt);
+    assert!(ret.unwrap() == None);
+    assert!(pm.accumulator() == 0xDEAD);
   }
 }
