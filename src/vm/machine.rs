@@ -92,6 +92,7 @@ impl PsuedoMachine {
   }
 
   /// Helper for full word loads.
+  #[inline]
   fn ld_u32(&mut self, offset: u32, buf: &[u8]) -> Result<u32, ()> {
     if offset as usize >= buf.len() {
       return Err(());
@@ -105,6 +106,7 @@ impl PsuedoMachine {
   }
 
   /// Helper for half-words loads.
+  #[inline]
   fn ld_u16(&mut self, offset: u32, buf: &[u8]) -> Result<u32, ()> {
     if offset as usize >= buf.len() {
       return Err(());
@@ -118,6 +120,7 @@ impl PsuedoMachine {
   }
 
   /// Helper for single byte loads.
+  #[inline]
   fn ld_u8(&mut self, offset: u32, buf: &[u8]) -> Result<u32, ()> {
     if offset as usize >= buf.len() {
       return Err(());

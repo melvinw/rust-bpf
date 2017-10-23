@@ -216,41 +216,49 @@ impl Instruction {
   }
 
   /// Decodes an instruction from a u64 in host byte order.
+  #[inline]
   pub fn from_u64(val: u64) -> Instruction {
     unsafe { mem::transmute(val) }
   }
 
   /// Returns the operator class.
+  #[inline]
   pub fn class(&self) -> u16 {
     self.opcode & MASK_CLASS
   }
 
   /// Returns the whether the operator operates on a byte, half-word or word.
+  #[inline]
   pub fn size(&self) -> u16 {
     self.opcode & MASK_SIZE
   }
 
   /// Returns the operator's addressing mode.
+  #[inline]
   pub fn mode(&self) -> u16 {
     self.opcode & MASK_MODE
   }
 
   /// Returns the encoded operator.
+  #[inline]
   pub fn op(&self) -> u16 {
     self.opcode & MASK_OP
   }
 
   /// Returns the source of the operator's argument(s).
+  #[inline]
   pub fn src(&self) -> u16 {
     self.opcode & MASK_SRC
   }
 
   /// Returns where the return value comes from.
+  #[inline]
   pub fn rval(&self) -> u16 {
     self.opcode & MASK_RVAL
   }
 
   /// Returns one of the register transfer functions.
+  #[inline]
   pub fn miscop(&self) -> u16 {
     self.opcode & MASK_MISCOP
   }
