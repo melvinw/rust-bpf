@@ -133,6 +133,7 @@ impl PsuedoMachine {
     let k = instr.k;
     let idx = self.index;
 
+    let mut jmp_case = false;
     let ret = match opcode {
       LDI => {
         self.accumulator = k;
@@ -313,6 +314,26 @@ impl PsuedoMachine {
         self.accumulator = !self.accumulator;
         Ok(None)
       },
+      JMP => {
+        self.frame = k;
+        Ok(None)
+      },
+      JMPEQ => {
+        jmp_case = self.accumulator == k;
+        Ok(None)
+      },
+      JMPGT => {
+        jmp_case = self.accumulator > k;
+        Ok(None)
+      },
+      JMPGE => {
+        jmp_case = self.accumulator >= k;
+        Ok(None)
+      },
+      JMPSET => {
+        jmp_case = (self.accumulator & k) > 0;
+        Ok(None)
+      },
       _ => Err(()),
     };
     if ret.is_err() {
@@ -320,10 +341,12 @@ impl PsuedoMachine {
     }
     self.frame += match class {
       CLASS_JMP => {
-        if self.accumulator > 0 {
+        if instr.op() != OP_JA && jmp_case {
           instr.jt as u32
-        } else {
+        } else if instr.op() != OP_JA {
           instr.jf as u32
+        } else {
+          0
         }
       },
       _ => 1,
@@ -631,5 +654,33 @@ mod tests {
     let mod_instr = Instruction::new(CLASS_ALU | SRC_K | OP_MOD, 0, 0, 2);
     pm.execute(&mod_instr, &pkt).unwrap();
     assert!(pm.accumulator() == expected % 2);
+  }
+
+  #[test]
+  fn jump() {
+    let mut pm = PsuedoMachine::new();
+    let pkt = [0 as u8; 64];
+    let mut instr = Instruction::new(CLASS_JMP | OP_JA, 0, 0, 10);
+    pm.set_accumulator(100);
+    pm.execute(&instr, &pkt).unwrap();
+    assert!(pm.frame() == 10);
+    instr = Instruction::new(CLASS_JMP | OP_JEQ, 2, 1, 100);
+    pm.execute(&instr, &pkt).unwrap();
+    assert!(pm.frame() == 12);
+    instr = Instruction::new(CLASS_JMP | OP_JEQ, 1, 2, 3);
+    pm.execute(&instr, &pkt).unwrap();
+    assert!(pm.frame() == 14);
+    instr = Instruction::new(CLASS_JMP | OP_JGT, 2, 1, 99);
+    pm.execute(&instr, &pkt).unwrap();
+    assert!(pm.frame() == 16);
+    instr = Instruction::new(CLASS_JMP | OP_JGE, 2, 1, 99);
+    pm.execute(&instr, &pkt).unwrap();
+    assert!(pm.frame() == 18);
+    instr = Instruction::new(CLASS_JMP | OP_JGE, 2, 1, 100);
+    pm.execute(&instr, &pkt).unwrap();
+    assert!(pm.frame() == 20);
+    instr = Instruction::new(CLASS_JMP | OP_JSET, 2, 1, 100);
+    pm.execute(&instr, &pkt).unwrap();
+    assert!(pm.frame() == 22);
   }
 }

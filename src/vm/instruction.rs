@@ -142,6 +142,14 @@ pub const XORK: u16 = CLASS_ALU | SRC_K | OP_XOR;
 /// Store the bitwise negation of the accumulator's value in the accumulator
 pub const NEG: u16 = CLASS_ALU | OP_NEG;
 
+/// Set the frame pointer to an immediate
+pub const JMP: u16 = CLASS_JMP | OP_JA;
+
+/// Conditional jumps
+pub const JMPEQ: u16 = CLASS_JMP | OP_JEQ;
+pub const JMPGT: u16 = CLASS_JMP | OP_JGT;
+pub const JMPGE: u16 = CLASS_JMP | OP_JGE;
+pub const JMPSET: u16 = CLASS_JMP | OP_JSET;
 
 /// A BPF psuedo-machine instruction.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
