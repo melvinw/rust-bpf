@@ -203,6 +203,14 @@ impl PsuedoMachine {
         self.memory[k as usize] = self.index;
         Ok(None)
       },
+      TXA => {
+        self.accumulator = self.index;
+        Ok(None)
+      },
+      TAX => {
+        self.index = self.accumulator;
+        Ok(None)
+      },
       _ => Err(()),
     };
     if ret.is_err() {
@@ -408,5 +416,27 @@ mod tests {
     let ret = pm.execute(&instr, &pkt);
     assert!(ret.unwrap() == None);
     assert!(pm.memory()[8] == 0xDEADBEEF);
+  }
+
+  #[test]
+  fn txa() {
+    let mut pm = PsuedoMachine::new();
+    let instr = Instruction::new(CLASS_MISC | OP_TXA, 0, 0, 0);
+    let pkt = [0 as u8; 64];
+    pm.set_index(0xDEADBEEF);
+    let ret = pm.execute(&instr, &pkt);
+    assert!(ret.unwrap() == None);
+    assert!(pm.accumulator() == 0xDEADBEEF);
+  }
+
+  #[test]
+  fn tax() {
+    let mut pm = PsuedoMachine::new();
+    let instr = Instruction::new(CLASS_MISC | OP_TAX, 0, 0, 0);
+    let pkt = [0 as u8; 64];
+    pm.set_accumulator(0xDEADBEEF);
+    let ret = pm.execute(&instr, &pkt);
+    assert!(ret.unwrap() == None);
+    assert!(pm.index() == 0xDEADBEEF);
   }
 }

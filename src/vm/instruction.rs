@@ -103,6 +103,12 @@ pub const ST: u16 = MODE_MEM | CLASS_ST;
 /// Copy the contents of the index register to a scratch memory slot
 pub const STX: u16 = MODE_MEM | CLASS_STX;
 
+/// Copy the contents of the index register to the accumulator
+pub const TXA: u16 = CLASS_MISC | OP_TXA;
+
+/// Copy the contents of the accumulator to the index register
+pub const TAX: u16 = CLASS_MISC | OP_TAX;
+
 /// A BPF psuedo-machine instruction.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Instruction {
