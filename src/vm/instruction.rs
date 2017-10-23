@@ -84,11 +84,15 @@ pub const LDWM: u16 = MODE_MEM | SIZE_W | CLASS_LD;
 pub const LDH: u16 = MODE_ABS | SIZE_H | CLASS_LD;
 /// Load a half-word into the accumulator with indirection
 pub const LDHI: u16 = MODE_IND | SIZE_H | CLASS_LD;
+/// Load a half-word into the accumulator from scratch memory
+pub const LDHM: u16 = MODE_MEM | SIZE_H | CLASS_LD;
 
 /// Load a byte into the accumulator
 pub const LDB: u16 = MODE_ABS | SIZE_B | CLASS_LD;
 /// Load a byte into the accumulator with indirection
 pub const LDBI: u16 = MODE_IND | SIZE_B | CLASS_LD;
+/// Load a byte into the accumulator from scratch memory
+pub const LDBM: u16 = MODE_MEM | SIZE_B | CLASS_LD;
 
 /// Load an immediate into the index register
 pub const LDXI: u16 = MODE_IMM | SIZE_W | CLASS_LDX;

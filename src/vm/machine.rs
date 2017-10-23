@@ -161,12 +161,28 @@ impl PsuedoMachine {
         self.accumulator = self.ld_u16(idx + k, pkt)?;
         Ok(None)
       },
+      LDHM => {
+        if k >= SCRATCH_MEM_SLOTS as u32 {
+          return Err(());
+        }
+        let val = self.memory[k as usize] & 0x0000FFFF;
+        self.accumulator = val;
+        Ok(None)
+      },
       LDB => {
         self.accumulator = self.ld_u8(k, pkt)?;
         Ok(None)
       },
       LDBI => {
         self.accumulator = self.ld_u8(idx + k, pkt)?;
+        Ok(None)
+      },
+      LDBM => {
+        if k >= SCRATCH_MEM_SLOTS as u32 {
+          return Err(());
+        }
+        let val = self.memory[k as usize] & 0x000000FF;
+        self.accumulator = val;
         Ok(None)
       },
       LDXI => {
@@ -245,7 +261,7 @@ mod tests {
   #[test]
   fn ldwm() {
     let mut pm = PsuedoMachine::new();
-    let mut pkt = [0 as u8; 64];
+    let pkt = [0 as u8; 64];
     pm.set_memory(5, 0xDEADBEEF);
     let instr = Instruction::new(MODE_MEM | SIZE_W | CLASS_LD, 0, 0, 5);
     let ret = pm.execute(&instr, &pkt);
@@ -268,6 +284,17 @@ mod tests {
   }
 
   #[test]
+  fn ldhm() {
+    let mut pm = PsuedoMachine::new();
+    let pkt = [0 as u8; 64];
+    pm.set_memory(5, 0xDEADBEEF);
+    let instr = Instruction::new(MODE_MEM | SIZE_H | CLASS_LD, 0, 0, 5);
+    let ret = pm.execute(&instr, &pkt);
+    assert!(ret.unwrap() == None);
+    assert!(pm.accumulator() == 0xBEEF);
+  }
+
+  #[test]
   fn ldb() {
     let mut pm = PsuedoMachine::new();
     let mut pkt = [0 as u8; 64];
@@ -279,6 +306,17 @@ mod tests {
     let ret = pm.execute(&instr, &pkt);
     assert!(ret.unwrap() == None);
     assert!(pm.accumulator() == 0xDE);
+  }
+
+  #[test]
+  fn ldbm() {
+    let mut pm = PsuedoMachine::new();
+    let pkt = [0 as u8; 64];
+    pm.set_memory(5, 0xDEADBEEF);
+    let instr = Instruction::new(MODE_MEM | SIZE_B | CLASS_LD, 0, 0, 5);
+    let ret = pm.execute(&instr, &pkt);
+    assert!(ret.unwrap() == None);
+    assert!(pm.accumulator() == 0xEF);
   }
 
   #[test]
