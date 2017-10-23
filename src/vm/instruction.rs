@@ -72,14 +72,19 @@ pub const MASK_MISCOP: u16 = 0xf8;
 // Mnemonics
 /// Load an immediate into the accumulator
 pub const LDI: u16 = MODE_IMM | CLASS_LD;
+
 /// Load a word into the accumulator
 pub const LDW: u16 = MODE_ABS | SIZE_W | CLASS_LD;
 /// Load a word into the accumulator with indirection
 pub const LDWI: u16 = MODE_IND | SIZE_W | CLASS_LD;
+/// Load a word into the accumulator from scratch memory
+pub const LDWM: u16 = MODE_MEM | SIZE_W | CLASS_LD;
+
 /// Load a half-word into the accumulator
 pub const LDH: u16 = MODE_ABS | SIZE_H | CLASS_LD;
 /// Load a half-word into the accumulator with indirection
 pub const LDHI: u16 = MODE_IND | SIZE_H | CLASS_LD;
+
 /// Load a byte into the accumulator
 pub const LDB: u16 = MODE_ABS | SIZE_B | CLASS_LD;
 /// Load a byte into the accumulator with indirection

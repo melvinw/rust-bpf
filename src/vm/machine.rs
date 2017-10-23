@@ -146,6 +146,13 @@ impl PsuedoMachine {
         self.accumulator = self.ld_u32(idx + k, pkt)?;
         Ok(None)
       },
+      LDWM => {
+        if k >= SCRATCH_MEM_SLOTS as u32 {
+          return Err(());
+        }
+        self.accumulator = self.memory[k as usize];
+        Ok(None)
+      },
       LDH => {
         self.accumulator = self.ld_u16(k, pkt)?;
         Ok(None)
@@ -230,6 +237,17 @@ mod tests {
     pkt[5] = 0xBE;
     pkt[6] = 0xEF;
     let instr = Instruction::new(MODE_ABS | SIZE_W | CLASS_LD, 0, 0, 3);
+    let ret = pm.execute(&instr, &pkt);
+    assert!(ret.unwrap() == None);
+    assert!(pm.accumulator() == 0xDEADBEEF);
+  }
+
+  #[test]
+  fn ldwm() {
+    let mut pm = PsuedoMachine::new();
+    let mut pkt = [0 as u8; 64];
+    pm.set_memory(5, 0xDEADBEEF);
+    let instr = Instruction::new(MODE_MEM | SIZE_W | CLASS_LD, 0, 0, 5);
     let ret = pm.execute(&instr, &pkt);
     assert!(ret.unwrap() == None);
     assert!(pm.accumulator() == 0xDEADBEEF);
