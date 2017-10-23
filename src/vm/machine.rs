@@ -211,6 +211,8 @@ impl PsuedoMachine {
         self.index = self.accumulator;
         Ok(None)
       },
+      RETA => Ok(Some(self.accumulator)),
+      RETK => Ok(Some(k)),
       _ => Err(()),
     };
     if ret.is_err() {
@@ -438,5 +440,24 @@ mod tests {
     let ret = pm.execute(&instr, &pkt);
     assert!(ret.unwrap() == None);
     assert!(pm.index() == 0xDEADBEEF);
+  }
+
+  #[test]
+  fn reta() {
+    let mut pm = PsuedoMachine::new();
+    let instr = Instruction::new(CLASS_RET | RVAL_A, 0, 0, 0);
+    let pkt = [0 as u8; 64];
+    pm.set_accumulator(0xDEADBEEF);
+    let ret = pm.execute(&instr, &pkt);
+    assert!(ret.unwrap().unwrap() == 0xDEADBEEF);
+  }
+
+  #[test]
+  fn retk() {
+    let mut pm = PsuedoMachine::new();
+    let instr = Instruction::new(CLASS_RET | RVAL_K, 0, 0, 0xDEADBEEF);
+    let pkt = [0 as u8; 64];
+    let ret = pm.execute(&instr, &pkt);
+    assert!(ret.unwrap().unwrap() == 0xDEADBEEF);
   }
 }

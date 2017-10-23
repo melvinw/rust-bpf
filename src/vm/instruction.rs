@@ -59,6 +59,7 @@ pub const SRC_X: u16 = 0x08;
 
 // Retval
 pub const RVAL_A: u16 = 0x10;
+pub const RVAL_K: u16 = 0x00;
 
 // Helpful masks
 pub const MASK_CLASS: u16 = 0x07;
@@ -108,6 +109,11 @@ pub const TXA: u16 = CLASS_MISC | OP_TXA;
 
 /// Copy the contents of the accumulator to the index register
 pub const TAX: u16 = CLASS_MISC | OP_TAX;
+
+/// Return the contents of the accumulator
+pub const RETA: u16 = CLASS_RET | RVAL_A;
+/// Return the operand
+pub const RETK: u16 = CLASS_RET;
 
 /// A BPF psuedo-machine instruction.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
