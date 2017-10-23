@@ -162,6 +162,10 @@ impl PsuedoMachine {
         self.accumulator = self.ld_u8(idx + k, pkt)?;
         Ok(None)
       },
+      LDXI => {
+        self.index = k;
+        Ok(None)
+      },
       _ => Err(()),
     };
     if ret.is_err() {
@@ -302,5 +306,15 @@ mod tests {
     let ret = pm.execute(&instr, &pkt);
     assert!(ret.unwrap() == None);
     assert!(pm.accumulator() == 0xDE);
+  }
+
+  #[test]
+  fn ldxi() {
+    let mut pm = PsuedoMachine::new();
+    let instr = Instruction::new(MODE_IMM | SIZE_W | CLASS_LDX, 0, 0, 14);
+    let pkt = [0 as u8; 64];
+    let ret = pm.execute(&instr, &pkt);
+    assert!(ret.unwrap() == None);
+    assert!(pm.index() == 14);
   }
 }

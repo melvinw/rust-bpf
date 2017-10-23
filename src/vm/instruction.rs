@@ -85,6 +85,9 @@ pub const LDB: u16 = MODE_ABS | SIZE_B | CLASS_LD;
 /// Load a byte into the accumulator with indirection
 pub const LDBI: u16 = MODE_IND | SIZE_B | CLASS_LD;
 
+/// Load an immediate into the index register
+pub const LDXI: u16 = MODE_IMM | SIZE_W | CLASS_LDX;
+
 /// A BPF psuedo-machine instruction.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Instruction {
