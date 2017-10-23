@@ -189,6 +189,20 @@ impl PsuedoMachine {
         self.index = k;
         Ok(None)
       },
+      ST => {
+        if k >= SCRATCH_MEM_SLOTS as u32 {
+          return Err(());
+        }
+        self.memory[k as usize] = self.accumulator;
+        Ok(None)
+      },
+      STX => {
+        if k >= SCRATCH_MEM_SLOTS as u32 {
+          return Err(());
+        }
+        self.memory[k as usize] = self.index;
+        Ok(None)
+      },
       _ => Err(()),
     };
     if ret.is_err() {
@@ -372,5 +386,27 @@ mod tests {
     let ret = pm.execute(&instr, &pkt);
     assert!(ret.unwrap() == None);
     assert!(pm.index() == 14);
+  }
+
+  #[test]
+  fn st() {
+    let mut pm = PsuedoMachine::new();
+    let instr = Instruction::new(MODE_MEM | CLASS_ST, 0, 0, 8);
+    let pkt = [0 as u8; 64];
+    pm.set_accumulator(0xDEADBEEF);
+    let ret = pm.execute(&instr, &pkt);
+    assert!(ret.unwrap() == None);
+    assert!(pm.memory()[8] == 0xDEADBEEF);
+  }
+
+  #[test]
+  fn stx() {
+    let mut pm = PsuedoMachine::new();
+    let instr = Instruction::new(MODE_MEM | CLASS_STX, 0, 0, 8);
+    let pkt = [0 as u8; 64];
+    pm.set_index(0xDEADBEEF);
+    let ret = pm.execute(&instr, &pkt);
+    assert!(ret.unwrap() == None);
+    assert!(pm.memory()[8] == 0xDEADBEEF);
   }
 }

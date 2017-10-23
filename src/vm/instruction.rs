@@ -97,6 +97,12 @@ pub const LDBM: u16 = MODE_MEM | SIZE_B | CLASS_LD;
 /// Load an immediate into the index register
 pub const LDXI: u16 = MODE_IMM | SIZE_W | CLASS_LDX;
 
+/// Copy the contents of the accumulator to a scratch memory slot
+pub const ST: u16 = MODE_MEM | CLASS_ST;
+
+/// Copy the contents of the index register to a scratch memory slot
+pub const STX: u16 = MODE_MEM | CLASS_STX;
+
 /// A BPF psuedo-machine instruction.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Instruction {
