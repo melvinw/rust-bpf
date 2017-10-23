@@ -90,41 +90,38 @@ impl PsuedoMachine {
     self.memory[n]
   }
 
-  /// Load a word into the accumulator.
-  fn ld_u32(&mut self, k: u32, pkt: &[u8]) -> Result<Option<u32>, ()> {
-    if k as usize >= pkt.len() {
+  /// Helper for full word loads.
+  fn ld_u32(&mut self, offset: u32, buf: &[u8]) -> Result<u32, ()> {
+    if offset as usize >= buf.len() {
       return Err(());
     }
-    let mut cur = Cursor::new(&pkt[k as usize..]);
+    let mut cur = Cursor::new(&buf[offset as usize..]);
     let ret = cur.read_u32::<BigEndian>();
     if ret.is_err() {
       return Err(());
     }
-    self.accumulator = ret.unwrap();
-    Ok(None)
+    Ok(ret.unwrap())
   }
 
-  /// Load a half-word into the accumulator.
-  fn ld_u16(&mut self, k: u32, pkt: &[u8]) -> Result<Option<u32>, ()> {
-    if k as usize >= pkt.len() {
+  /// Helper for half-words loads.
+  fn ld_u16(&mut self, offset: u32, buf: &[u8]) -> Result<u32, ()> {
+    if offset as usize >= buf.len() {
       return Err(());
     }
-    let mut cur = Cursor::new(&pkt[k as usize..]);
+    let mut cur = Cursor::new(&buf[offset as usize..]);
     let ret = cur.read_u16::<BigEndian>();
     if ret.is_err() {
       return Err(());
     }
-    self.accumulator = ret.unwrap() as u32;
-    Ok(None)
+    Ok(ret.unwrap() as u32)
   }
 
-  /// Load a byte into the accumulator.
-  fn ld_u8(&mut self, k: u32, pkt: &[u8]) -> Result<Option<u32>, ()> {
-    if k as usize >= pkt.len() {
+  /// Helper for single byte loads.
+  fn ld_u8(&mut self, offset: u32, buf: &[u8]) -> Result<u32, ()> {
+    if offset as usize >= buf.len() {
       return Err(());
     }
-    self.accumulator = pkt[k as usize] as u32;
-    Ok(None)
+    Ok(buf[offset as usize] as u32)
   }
 
   /// Execute an instruction and increments the frame pointer after successful execution.
@@ -141,12 +138,30 @@ impl PsuedoMachine {
         self.accumulator = k;
         Ok(None)
       },
-      LDW => self.ld_u32(k, pkt),
-      LDWI => self.ld_u32(idx + k, pkt),
-      LDH => self.ld_u16(k, pkt),
-      LDHI => self.ld_u16(idx + k, pkt),
-      LDB => self.ld_u8(k, pkt),
-      LDBI => self.ld_u8(idx + k, pkt),
+      LDW => {
+        self.accumulator = self.ld_u32(k, pkt)?;
+        Ok(None)
+      },
+      LDWI => {
+        self.accumulator = self.ld_u32(idx + k, pkt)?;
+        Ok(None)
+      },
+      LDH => {
+        self.accumulator = self.ld_u16(k, pkt)?;
+        Ok(None)
+      },
+      LDHI => {
+        self.accumulator = self.ld_u16(idx + k, pkt)?;
+        Ok(None)
+      },
+      LDB => {
+        self.accumulator = self.ld_u8(k, pkt)?;
+        Ok(None)
+      },
+      LDBI => {
+        self.accumulator = self.ld_u8(idx + k, pkt)?;
+        Ok(None)
+      },
       _ => Err(()),
     };
     if ret.is_err() {
