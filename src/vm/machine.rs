@@ -213,6 +213,106 @@ impl PsuedoMachine {
       },
       RETA => Ok(Some(self.accumulator)),
       RETK => Ok(Some(k)),
+      ADDX => {
+        self.accumulator += self.index;
+        Ok(None)
+      },
+      SUBX => {
+        self.accumulator -= self.index;
+        Ok(None)
+      },
+      MULX => {
+        if self.index == 0 {
+          Err(())
+        } else {
+          self.accumulator *= self.index;
+          Ok(None)
+        }
+      },
+      DIVX => {
+        self.accumulator /= self.index;
+        Ok(None)
+      },
+      ORX => {
+        self.accumulator |= self.index;
+        Ok(None)
+      },
+      ANDX => {
+        self.accumulator &= self.index;
+        Ok(None)
+      },
+      LSHX => {
+        self.accumulator <<= self.index;
+        Ok(None)
+      },
+      RSHX => {
+        self.accumulator >>= self.index;
+        Ok(None)
+      },
+      MODX => {
+        if self.index == 0 {
+          Err(())
+        } else {
+          self.accumulator %= self.index;
+          Ok(None)
+        }
+      },
+      XORX => {
+        self.accumulator ^= self.index;
+        Ok(None)
+      },
+      ADDK => {
+        self.accumulator += k;
+        Ok(None)
+      },
+      SUBK => {
+        self.accumulator -= k;
+        Ok(None)
+      },
+      MULK => {
+        self.accumulator *= k;
+        Ok(None)
+      },
+      DIVK => {
+        if k == 0 {
+          Err(())
+        } else {
+          self.accumulator /= k;
+          Ok(None)
+        }
+      },
+      ORK => {
+        self.accumulator |= k;
+        Ok(None)
+      },
+      ANDK => {
+        self.accumulator &= k;
+        Ok(None)
+      },
+      LSHK => {
+        self.accumulator <<= k;
+        Ok(None)
+      },
+      RSHK => {
+        self.accumulator >>= k;
+        Ok(None)
+      },
+      MODK => {
+        if k == 0 {
+          Err(())
+        } else {
+          self.accumulator %= k;
+          Ok(None)
+        }
+      },
+      XORK => {
+        self.accumulator ^= k;
+        Ok(None)
+      },
+      NEG => {
+        self.accumulator = !self.accumulator;
+        Ok(None)
+      },
       _ => Err(()),
     };
     if ret.is_err() {
@@ -220,7 +320,7 @@ impl PsuedoMachine {
     }
     self.frame += match class {
       CLASS_JMP => {
-        if self.accumulator == 0 {
+        if self.accumulator > 0 {
           instr.jt as u32
         } else {
           instr.jf as u32
@@ -235,6 +335,9 @@ impl PsuedoMachine {
   /// Returns Ok with accept/reject if the program completes, Err otherwise.
   pub fn run_program(&mut self, prog: &[Instruction], pkt: &[u8]) -> Result<u32, ()> {
     loop {
+      if self.frame as usize >= prog.len() {
+        return Err(());
+      }
       let ref instr = prog[self.frame as usize];
       let res = self.execute(instr, pkt);
       if res.is_err() {
@@ -459,5 +562,74 @@ mod tests {
     let pkt = [0 as u8; 64];
     let ret = pm.execute(&instr, &pkt);
     assert!(ret.unwrap().unwrap() == 0xDEADBEEF);
+  }
+
+  #[test]
+  fn alu_index() {
+    let mut pm = PsuedoMachine::new();
+    let pkt = [0 as u8; 64];
+    let prog = vec![
+      Instruction::new(CLASS_ALU | OP_NEG, 0, 0, 0),
+      Instruction::new(CLASS_ALU | SRC_X | OP_XOR, 0, 0, 0),
+      Instruction::new(CLASS_ALU | SRC_X | OP_ADD, 0, 0, 0),
+      Instruction::new(CLASS_ALU | SRC_X | OP_SUB, 0, 0, 0),
+      Instruction::new(CLASS_ALU | SRC_X | OP_MUL, 0, 0, 0),
+      Instruction::new(CLASS_ALU | SRC_X | OP_DIV, 0, 0, 0),
+      Instruction::new(CLASS_ALU | SRC_X | OP_OR, 0, 0, 0),
+      Instruction::new(CLASS_ALU | SRC_X | OP_AND, 0, 0, 0),
+      Instruction::new(CLASS_ALU | SRC_X | OP_LSH, 0, 0, 0),
+      Instruction::new(CLASS_ALU | SRC_X | OP_RSH, 0, 0, 0),
+      Instruction::new(CLASS_RET | RVAL_A, 0, 0, 0),
+    ];
+    pm.set_accumulator(!0xBEEF);
+    pm.set_index(2);
+    let ret = pm.run_program(prog.as_slice(), &pkt).unwrap();
+    let mut expected = 0xBEEF;
+    expected ^= 2;
+    expected += 2;
+    expected -= 2;
+    expected *= 2;
+    expected |= 2;
+    expected &= 2;
+    expected <<= 2;
+    expected >>= 2;
+    assert!(ret == expected);
+    let mod_instr = Instruction::new(CLASS_ALU | SRC_X | OP_MOD, 0, 0, 0);
+    pm.execute(&mod_instr, &pkt).unwrap();
+    assert!(pm.accumulator() == expected % 2);
+  }
+
+  #[test]
+  fn alu_imm() {
+    let mut pm = PsuedoMachine::new();
+    let pkt = [0 as u8; 64];
+    let prog = vec![
+      Instruction::new(CLASS_ALU | OP_NEG, 0, 0, 0),
+      Instruction::new(CLASS_ALU | SRC_K | OP_XOR, 0, 0, 2),
+      Instruction::new(CLASS_ALU | SRC_K | OP_ADD, 0, 0, 2),
+      Instruction::new(CLASS_ALU | SRC_K | OP_SUB, 0, 0, 2),
+      Instruction::new(CLASS_ALU | SRC_K | OP_MUL, 0, 0, 2),
+      Instruction::new(CLASS_ALU | SRC_K | OP_DIV, 0, 0, 2),
+      Instruction::new(CLASS_ALU | SRC_K | OP_OR, 0, 0, 2),
+      Instruction::new(CLASS_ALU | SRC_K | OP_AND, 0, 0, 2),
+      Instruction::new(CLASS_ALU | SRC_K | OP_LSH, 0, 0, 2),
+      Instruction::new(CLASS_ALU | SRC_K | OP_RSH, 0, 0, 2),
+      Instruction::new(CLASS_RET | RVAL_A, 0, 0, 0),
+    ];
+    pm.set_accumulator(!0xBEEF);
+    let ret = pm.run_program(prog.as_slice(), &pkt).unwrap();
+    let mut expected = 0xBEEF;
+    expected ^= 2;
+    expected += 2;
+    expected -= 2;
+    expected *= 2;
+    expected |= 2;
+    expected &= 2;
+    expected <<= 2;
+    expected >>= 2;
+    assert!(ret == expected);
+    let mod_instr = Instruction::new(CLASS_ALU | SRC_K | OP_MOD, 0, 0, 2);
+    pm.execute(&mod_instr, &pkt).unwrap();
+    assert!(pm.accumulator() == expected % 2);
   }
 }

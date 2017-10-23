@@ -115,6 +115,34 @@ pub const RETA: u16 = CLASS_RET | RVAL_A;
 /// Return the operand
 pub const RETK: u16 = CLASS_RET;
 
+/// Arithmetic with index register as operand
+pub const ADDX: u16 = CLASS_ALU | SRC_X | OP_ADD;
+pub const SUBX: u16 = CLASS_ALU | SRC_X | OP_SUB;
+pub const MULX: u16 = CLASS_ALU | SRC_X | OP_MUL;
+pub const DIVX: u16 = CLASS_ALU | SRC_X | OP_DIV;
+pub const ORX: u16 = CLASS_ALU | SRC_X | OP_OR;
+pub const ANDX: u16 = CLASS_ALU | SRC_X | OP_AND;
+pub const LSHX: u16 = CLASS_ALU | SRC_X | OP_LSH;
+pub const RSHX: u16 = CLASS_ALU | SRC_X | OP_RSH;
+pub const MODX: u16 = CLASS_ALU | SRC_X | OP_MOD;
+pub const XORX: u16 = CLASS_ALU | SRC_X | OP_XOR;
+
+/// Arithmetic with immediate as operand
+pub const ADDK: u16 = CLASS_ALU | SRC_K | OP_ADD;
+pub const SUBK: u16 = CLASS_ALU | SRC_K | OP_SUB;
+pub const MULK: u16 = CLASS_ALU | SRC_K | OP_MUL;
+pub const DIVK: u16 = CLASS_ALU | SRC_K | OP_DIV;
+pub const ORK: u16 = CLASS_ALU | SRC_K | OP_OR;
+pub const ANDK: u16 = CLASS_ALU | SRC_K | OP_AND;
+pub const LSHK: u16 = CLASS_ALU | SRC_K | OP_LSH;
+pub const RSHK: u16 = CLASS_ALU | SRC_K | OP_RSH;
+pub const MODK: u16 = CLASS_ALU | SRC_K | OP_MOD;
+pub const XORK: u16 = CLASS_ALU | SRC_K | OP_XOR;
+
+/// Store the bitwise negation of the accumulator's value in the accumulator
+pub const NEG: u16 = CLASS_ALU | OP_NEG;
+
+
 /// A BPF psuedo-machine instruction.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Instruction {
