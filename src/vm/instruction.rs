@@ -98,6 +98,9 @@ pub const LDBM: u16 = MODE_MEM | SIZE_B | CLASS_LD;
 /// Load an immediate into the index register
 pub const LDXI: u16 = MODE_IMM | SIZE_W | CLASS_LDX;
 
+/// Load 4 * (pkt[k] & 0x0F) into the index register
+pub const LDXL: u16 = MODE_LEN | SIZE_W | SIZE_B | CLASS_LDX;
+
 /// Copy the contents of the accumulator to a scratch memory slot
 pub const ST: u16 = MODE_MEM | CLASS_ST;
 

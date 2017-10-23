@@ -190,6 +190,14 @@ impl PsuedoMachine {
         self.index = k;
         Ok(None)
       },
+      LDXL => {
+        if k >= pkt.len() as u32 {
+          Err(())
+        } else {
+          self.index = 4 * (pkt[k as usize] & 0x0F) as u32;
+          Ok(None)
+        }
+      },
       ST => {
         if k >= SCRATCH_MEM_SLOTS as u32 {
           return Err(());
@@ -522,6 +530,17 @@ mod tests {
     let ret = pm.execute(&instr, &pkt);
     assert!(ret.unwrap() == None);
     assert!(pm.index() == 14);
+  }
+
+  #[test]
+  fn ldxl() {
+    let mut pm = PsuedoMachine::new();
+    let instr = Instruction::new(MODE_LEN | SIZE_W | SIZE_B | CLASS_LDX, 0, 0, 3);
+    let mut pkt = [0 as u8; 64];
+    pkt[3] = 0x1A;
+    let ret = pm.execute(&instr, &pkt);
+    assert!(ret.unwrap() == None);
+    assert!(pm.index() == 40);
   }
 
   #[test]
