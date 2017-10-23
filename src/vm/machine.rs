@@ -2,6 +2,7 @@
 extern crate byteorder;
 
 use std::io::Cursor;
+use std::slice;
 
 use self::byteorder::{BigEndian, NativeEndian, ReadBytesExt};
 
@@ -383,8 +384,12 @@ impl PsuedoMachine {
 
   /// Runs the program stored in a byte buffer.
   /// Returns Ok with accept/reject if the program completes, Err otherwise.
-  pub fn run_program_bytes(&mut self, _: &[u8], _: &[u8]) -> Result<u32, ()> {
-    unimplemented!()
+  pub fn run_program_bytes(&mut self, prog: &[u8], pkt: &[u8]) -> Result<u32, ()> {
+    if prog.len() % 8 > 0 {
+      return Err(());
+    }
+    let instrs = unsafe { slice::from_raw_parts(prog.as_ptr() as *const Instruction, prog.len() / 8) };
+    self.run_program(instrs, pkt)
   }
 }
 
@@ -701,5 +706,21 @@ mod tests {
     instr = Instruction::new(CLASS_JMP | OP_JSET, 2, 1, 100);
     pm.execute(&instr, &pkt).unwrap();
     assert!(pm.frame() == 22);
+  }
+
+  #[test]
+  fn run_bytecode() {
+    let mut pm = PsuedoMachine::new();
+    let pkt = [0 as u8; 64];
+    let prog = vec![
+      Instruction::new(MODE_IMM | CLASS_LD, 0, 0, 0xBEEF),
+      Instruction::new(CLASS_ALU | OP_NEG, 0, 0, 0),
+      Instruction::new(CLASS_ALU | SRC_K | OP_XOR, 0, 0, 0xDEAD),
+      Instruction::new(CLASS_RET | RVAL_A, 0, 0, 0),
+    ];
+    let prog_bytes = unsafe { slice::from_raw_parts(prog.as_slice().as_ptr() as *const u8, 32) };
+    let ret = pm.run_program_bytes(prog_bytes, &pkt).unwrap();
+    let expected = !0xBEEF ^ 0xDEAD;
+    assert!(ret == expected);
   }
 }
