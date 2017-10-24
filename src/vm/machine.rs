@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+extern crate rust_bpf;
 extern crate byteorder;
 
 use std::io::Cursor;
@@ -6,7 +7,7 @@ use std::slice;
 
 use self::byteorder::{BigEndian, NativeEndian, ReadBytesExt};
 
-use instruction::*;
+use self::rust_bpf::common::instruction::*;
 
 const SCRATCH_MEM_SLOTS: usize = 16;
 
